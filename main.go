@@ -5,7 +5,6 @@ import (
         "log"
         "net/http"
         "os"
-        // "log"
 
         "mediago/handler"
         pb "mediago/pb"
