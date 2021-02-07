@@ -9,6 +9,8 @@ import (
 	pb "mediago/pb"
 )
 
+const authUidStoreKey = "__auth_admin_uid_store_key__"
+
 func GetMe(ctx context.Context, req *pb.Empty) (resp *pb.AdminUser, err error) {
 
 	client, err := firebaseInit(ctx)
@@ -16,7 +18,9 @@ func GetMe(ctx context.Context, req *pb.Empty) (resp *pb.AdminUser, err error) {
 			log.Fatal(err)
 	}
 
-	dsnap, err := client.Collection("user").Doc("ERnaCaphMtSVLh97SLPEQn3sdR22").Get(ctx)
+	uid, _ := ctx.Value(authUidStoreKey).(model.UserID)
+
+	dsnap, err := client.Collection("user").Doc(uid.String()).Get(ctx)
 	if err != nil {
         return nil, err
 	}
@@ -63,19 +67,16 @@ func AdminUserCreate(ctx context.Context, req *pb.CreateAdminUserRequest) (resp 
 			log.Fatal(err)
 	}
 
-	ref := client.Collection("user").NewDoc()
+	uid, _ := ctx.Value(authUidStoreKey).(model.UserID)
 
 	user := &model.CreateAdminUser{
-		Id: ref.ID,
+		Id: uid.String(),
 		Email: req.GetEmail(),
 		Password: req.GetPassword(),
 		Name: "",
 	}
 
-	_, err = ref.Set(ctx, user)
-	if err != nil {
-		log.Fatalf("Failed adding alovelace: %v", err)
-	}
+	_, err = client.Collection("user").Doc(uid.String()).Set(ctx, user)
 
 	defer client.Close()
 
@@ -91,14 +92,16 @@ func AdminUserUpdate(ctx context.Context, req *pb.UpdateAdminUserRequest) (resp 
 			log.Fatal(err)
 	}
 
-	_, err = client.Collection("user").Doc(req.GetId()).Set(ctx, map[string]interface{}{
+	uid, _ := ctx.Value(authUidStoreKey).(model.UserID)
+
+	_, err = client.Collection("user").Doc(uid.String()).Set(ctx, map[string]interface{}{
 		"name": req.GetName(),
 	}, firestore.MergeAll)
 	if err != nil {
 		log.Fatalf("Failed adding alovelace: %v", err)
 	}
 
-	dsnap, err := client.Collection("user").Doc(req.GetId()).Get(ctx)
+	dsnap, err := client.Collection("user").Doc(uid.String()).Get(ctx)
 	if err != nil {
         return nil, err
 	}
@@ -120,7 +123,9 @@ func AdminUserDelete(ctx context.Context, req *pb.AdminUserID) (resp *pb.Empty, 
 			log.Fatal(err)
 	}
 
-	_, err = client.Collection("user").Doc(req.GetId()).Delete(ctx)
+	uid, _ := ctx.Value(authUidStoreKey).(model.UserID)
+
+	_, err = client.Collection("user").Doc(uid.String()).Delete(ctx)
 	if err != nil {
 			log.Printf("An error has occurred: %s", err)
 	}

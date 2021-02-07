@@ -7,7 +7,22 @@ import (
 	"mediago/repository"
 )
 
-type ArticleService struct {}
+type ArticleService struct {
+	contextProvider ContextProvider
+}
+
+type ArticleHandler interface {
+	Get(ctx context.Context, req *pb.ArticleID) (resp *pb.Article, err error)
+	GetAll(ctx context.Context, req *pb.Pager) (resp *pb.ArticleList, err error)
+	Create(ctx context.Context, req *pb.CreateArticleRequest) (resp *pb.Article, err error)
+	Update(ctx context.Context, req *pb.UpdateArticleRequest) (resp *pb.Article, err error)
+	Delete(ctx context.Context, req *pb.ArticleID) (resp *pb.Empty, err error)
+}
+
+func NewArticleService() AdminUserHandler {
+	c := NewContextProvider()
+	return &AdminUserService{contextProvider: c}
+}
 
 func (a *ArticleService) Get(ctx context.Context, req *pb.ArticleID) (resp *pb.Article, err error) {
 

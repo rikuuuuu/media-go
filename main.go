@@ -3,7 +3,6 @@ package main
 import (
         // "context"
         "log"
-        "fmt"
         "net/http"
         "os"
         // "log"
@@ -23,6 +22,7 @@ const (
 func twirpAPI() {
         twirpArticleHandler := pb.NewArticleServiceServer(&handler.ArticleService{}, nil)
 
+        // adminHandler := handler.NewAdminUserService()
         twirpAdminUserHandler := pb.NewAdminUserServiceServer(&handler.AdminUserService{}, nil)
 
         mux := http.NewServeMux()
@@ -35,13 +35,13 @@ func twirpAPI() {
 		AllowedMethods: []string{"POST", "GET"},
                 AllowedHeaders: []string{
                         "Content-Type", 
-                        // "Authorization",
+                        "Authorization",
                 },
         })
         
-        handler := corsWrapper.Handler(mux)
+        h := corsWrapper.Handler(mux)
 
-        http.HandleFunc("/", createAppHandler(handler))
+        // http.HandleFunc("/", createAppHandler(h))
 
         port := os.Getenv("PORT")
         if port == "" {
@@ -50,8 +50,7 @@ func twirpAPI() {
         }
 
         log.Printf("Listening on port %s", port)
-        // twirpHandler(handler)
-        if err := http.ListenAndServe(":"+port, nil); err != nil {
+        if err := http.ListenAndServe(":"+port, twirpHandler(h, handler.NewContextProvider())); err != nil {
                 log.Fatal(err)
         }
 
@@ -66,7 +65,7 @@ func main() {
 // 	http.Error(w, "unauthorized", 401)
 // }
 
-func twirpHandler(h http.Handler) http.HandlerFunc {
+func twirpHandler(h http.Handler, contextProvider handler.ContextProvider) http.HandlerFunc {
         return func(w http.ResponseWriter, r *http.Request) {
 
                 tokenString := r.Header.Get(authKey)
@@ -75,20 +74,14 @@ func twirpHandler(h http.Handler) http.HandlerFunc {
 
                 if len(tokenString) >= 7 {
                         userID, _ = model.VerifyAccessToken(tokenString[7:])
-                        fmt.Printf("%v", userID)
-                        // ctx := r.Context()
+                        ctx := r.Context()
 
-                        // newContext, _ := handler.ContextProvider.WithAuthUID(ctx, userID)
-                        // fmt.Printf("%v", newContext)
-                        // h.ServeHTTP(w, r.WithContext(newContext))
-                        h.ServeHTTP(w, r)
+                        handler.NewAdminUserService()
+                        newContext, _ := contextProvider.WithAuthUID(ctx, userID)
+                        h.ServeHTTP(w, r.WithContext(newContext))
                 } else {
-                        fmt.Printf("%v", "else")
                         h.ServeHTTP(w, r)
                 }
-
-                // h.ServeHTTP(w, r)
-
         }
 }
 

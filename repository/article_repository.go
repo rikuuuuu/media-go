@@ -1,7 +1,7 @@
 package repository
 
 import (
-	// "time"
+	"time"
 	"context"
 	"log"
 	"mediago/model"
@@ -65,24 +65,26 @@ func ArticleGetAll(ctx context.Context, req *pb.Pager) (resp *pb.ArticleList, er
 
 func ArticleCreate(ctx context.Context, req *pb.CreateArticleRequest) (resp *pb.Article, err error) {
 
-	// now := time.Now()
-  
-	// article.Created = now
-	// article.Updated = now
+	now := time.Now()
+	layout := "2006-01-02"
+
+	n := now.Format(layout)
 
 	client, err := firebaseInit(ctx)
 		if err != nil {
 			log.Fatal(err)
 	}
 
+	uid, _ := ctx.Value(authUidStoreKey).(model.UserID)
+
 	ref := client.Collection("article").NewDoc()
 
 	article := &model.CreateArticle{
 		Id: ref.ID,
-		UserId: "test",
+		UserId: uid.String(),
 		Title: req.GetTitle(),
 		Description: req.GetDescription(),
-		CreatedAt: "test",
+		CreatedAt: n,
 		ThumbnailURL: req.GetThumbnailURL(),
 	}
 
@@ -94,11 +96,11 @@ func ArticleCreate(ctx context.Context, req *pb.CreateArticleRequest) (resp *pb.
 	defer client.Close()
   
 	return &pb.Article{
-		Id: "test",
-		UserID: "test",
+		Id: ref.ID,
+		UserID: uid.String(),
 		Title: req.GetTitle(),
 		Description: req.GetDescription(),
-		CreatedAt: "test",
+		CreatedAt: n,
 		ThumbnailURL: req.GetThumbnailURL(),
 	}, nil
 }
