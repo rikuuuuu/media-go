@@ -40,7 +40,7 @@ func twirpAPI() {
         
         h := corsWrapper.Handler(mux)
 
-        // http.HandleFunc("/", createAppHandler(h))
+        http.HandleFunc("/", createAppHandler(h))
 
         port := os.Getenv("PORT")
         if port == "" {
