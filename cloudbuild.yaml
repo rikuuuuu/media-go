@@ -6,8 +6,8 @@ steps:
     - "--location=asia-northeast1"
     - "--keyring=mediadev"
     - "--key=config"
-    - "--plaintext-file=${APP_ROOT}/config/dev-secret.json"
-    - "--ciphertext-file=${APP_ROOT}/config/dev-secret.json.enc"
+    - "--plaintext-file=config/dev-secret.json"
+    - "--ciphertext-file=config/dev-secret.json.enc"
   id: Decrypt
 - name: "gcr.io/cloud-builders/gcloud"
   args: ["app", "deploy"]
