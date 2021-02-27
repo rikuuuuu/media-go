@@ -11,7 +11,7 @@ import (
 
 func firebaseInit(ctx context.Context) (*firestore.Client, error) {
 
-	sa := option.WithCredentialsFile("path/to/serviceAccount.json")
+	sa := option.WithCredentialsFile("config/dev-secret.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
